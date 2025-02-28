@@ -1,17 +1,5 @@
-from docling.document_converter import DocumentConverter
-
-
-
-
-class DocumentConverter:
-    def convert(self, source):
-        converter = DocumentConverter()
-        result = converter.convert(source)
-        final = result.document.export_to_dict()
-        return final
-
-
+from api import app as api_app
+import uvicorn
 
 if __name__ == "__main__":
-    converter = DocumentConverter()
-    converter.convert("Especificacao Prefeitura Municipal de Vale do Anari.pdf ")
+    uvicorn.run(api_app, host="127.0.0.1", port=8000)

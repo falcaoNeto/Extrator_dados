@@ -1,12 +1,15 @@
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama.llms import OllamaLLM
+from docling.document_converter import DocumentConverter
+from contaAgua import ExtrairDados
 
-template = """Question: {question}"""
 
-prompt = ChatPromptTemplate.from_template(template)
+converter = DocumentConverter()
+result = converter.convert("deso.pdf")
+result2 = result.document.export_to_markdown()
 
-model = OllamaLLM(model="llama3.1")
 
-chain = prompt | model
+Extrai = ExtrairDados(result2)
+result3 = Extrai.extrair_conta_agua()
+print(type(result3))
+print("---------------------------------------------------------------------")
+print(result3)
 
-print(chain.invoke({"question": "o que é o langchain?"}))

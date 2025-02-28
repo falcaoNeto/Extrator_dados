@@ -9,6 +9,8 @@ import requests
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CommandHandler
 from telegram.ext._contexttypes import ContextTypes
+import json
+
 
 
 FASTAPI_URL = "http://127.0.0.1:8000/upload"  # Endpoint do FastAPI
@@ -18,18 +20,29 @@ FASTAPI_URL_RESPONSE = "http://127.0.0.1:8000/response"
 app = Application.builder().token(token).build()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Olá! Envie um áudio ou PDF para processarmos.")
+    await update.message.reply_text("Olá! Envie um PDF para processarmos. Clique em /DadosExtrair para verificar os dados a serem extraidos.")
+
+
+
+async def DadosExtrair(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    with open("contaAgua.json", "r") as f:
+        result = json.loads(f)
+
+    await update.message.reply_text(result)
+
 
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Recebe PDFs e repassa para o FastAPI"""
+    if update.message.text:
+        await update.message.reply_text("Envie um PDF para processarmos.")
+
     file = await update.message.document.get_file()
     file_path = file.file_path
     file_name = update.message.document.file_name
 
-    # Baixa o arquivo temporariamente
+    
     file_data = requests.get(file_path).content
     
-    # Envia para o FastAPI
+    
     files = {"file": (file_name, file_data)}
     response = requests.post(FASTAPI_URL, files=files)
 
