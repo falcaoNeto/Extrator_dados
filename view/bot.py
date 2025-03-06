@@ -97,7 +97,7 @@ async def process_individual_message(message) -> None:
     file_data = requests.get(file.file_path).content
     
     files = {"file": (file.file_path, file_data)}
-    response = requests.post(FASTAPI_URL_PHOTO, files=files)+
+    response = requests.post(FASTAPI_URL_PHOTO, files=files)
 
     if response.status_code == 200:
             await message[0].reply_text("✅ Documento processado com sucesso!\n\n")
