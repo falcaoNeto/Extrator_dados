@@ -1,0 +1,37 @@
+[
+    {
+        "index": 0,
+        "type": "string",
+        "description": "Valor total da fatura"
+    },
+    {
+        "index": 1,
+        "type": "string",
+        "description": "Consumo registrado em m3"
+    },
+    {
+        "index": 2,
+        "type": "string",
+        "description": "data de vencimento"
+    },
+    {
+        "index": 3,
+        "type": "string",
+        "description": "preço do metro cúbico"
+    },
+    {
+        "index": 4,
+        "type": "string",
+        "description": "mês de referência"
+    },
+    {
+        "index": 5,
+        "type": "string",
+        "description": "data de leitura"
+    },
+    {
+        "index": 6,
+        "type": "string",
+        "description": "consumo faturado"
+    }
+]

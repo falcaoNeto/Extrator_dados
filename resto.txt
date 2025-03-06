@@ -1,0 +1,41 @@
+async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    try:
+        file = await update.message.document.get_file()
+        file_data = requests.get(file.file_path).content
+        
+        files = {"file": (update.message.document.file_name, file_data)}
+        response = requests.post(FASTAPI_URL, files=files)
+        
+        if response.status_code == 200:
+            await update.message.reply_text("✅ Documento processado com sucesso!\n\n" + response.text)
+        else:
+            await update.message.reply_text(f"❌ Erro no processamento: {response.text}")
+
+    except Exception as e:
+        await update.message.reply_text(f"❌ Erro ao processar documento: {str(e)}")
+
+async def handle_audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    try:
+        file = await update.message.voice.get_file()
+        file_data = requests.get(file.file_path).content
+        
+        files = {"file": ("audio.ogg", file_data)}
+        response = requests.post(FASTAPI_URL, files=files)
+        
+        await update.message.reply_text(f"🎧 Áudio processado: {response.text}")
+
+    except Exception as e:
+        await update.message.reply_text(f"❌ Erro ao processar áudio: {str(e)}")
+
+async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    try:
+        message = update.message.text
+        response = requests.post(FASTAPI_URL_RESPONSE, json={"message": message})
+        
+        if response.status_code == 200:
+            await update.message.reply_text(response.text)
+        else:
+            await update.message.reply_text("🔍 Não entendi sua mensagem. Use os comandos disponíveis.")
+
+    except Exception as e:
+        await update.message.reply_text(f"❌ Erro na comunicação com o servidor: {str(e)}")

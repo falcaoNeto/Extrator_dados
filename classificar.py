@@ -34,11 +34,12 @@ class Classificar:
         format_prompt = prompt.format(texto=self.texto, format_instructions=format_instructions)
         result = self.llm.invoke(format_prompt)
         result = parser.parse(result)
-        return result
+        return result.result
     
 
 if __name__ == "__main__":
-    with open("arquivo.txt", "r") as f:
-        result2 = f.read()
-    classificar = Classificar(result2)
+    # with open("arquivo.txt", "r") as f:
+    #     result2 = f.read()
+    texto = "conta de agua, valor 120 reais e consumo de 45 m3"
+    classificar = Classificar(texto)
     print(classificar.classificar_texto())
