@@ -53,7 +53,7 @@ async def upload_photos(files: List[UploadFile] = File(...)):
         if len(textoImagem) == 0:
             textoImagem = textoresult
         else:
-            textoImagem += "\n" + textoresult  # Agora está acumulando corretamente os textos
+            textoImagem += "\n" + textoresult  
 
     print(textoImagem)
     result_classificar = Classificar(textoImagem).classificar_texto()
@@ -122,6 +122,100 @@ async def response(request: Request):
     response = agent.agent_response(message)
     print(response)
     return {"response": response}
+
+
+from model.atrDinamicos import JsonDocumentManager
+
+
+json_manager = JsonDocumentManager(base_path="model")
+
+@app.get("/GetAtrAgua")
+async def get_atributos_agua():
+    """Retorna todos os atributos da conta de água"""
+    try:
+        return json_manager.load_data('agua')
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@app.post("/AddAtrAgua")
+async def add_atributo_agua(request: Request):
+    """Adiciona um novo atributo à conta de água"""
+    data = await request.json()
+    try:
+        new_attr = json_manager.add_attribute('agua', data.get("description"))
+        return new_attr
+    except Exception as e:
+        return {"error": str(e)}, 400
+
+@app.post("/RemoveAtrAgua")
+async def remove_atributo_agua(request: Request):
+    """Remove um atributo da conta de água pelo index"""
+    data = await request.json()
+    try:
+        removed = json_manager.remove_attribute('agua', data.get("index"))
+        return removed if removed else {"error": "Atributo não encontrado"}, 404
+    except Exception as e:
+        return {"error": str(e)}, 400
+
+
+@app.get("/GetAtrNotaFiscalGeral")
+async def get_atributos_nota_geral():
+    """Retorna os atributos gerais da nota fiscal"""
+    try:
+        data = json_manager.load_data('nota')
+        return data[0]  
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@app.post("/AddAtrNotaFiscalGeral")
+async def add_atributo_nota_geral(request: Request):
+    """Adiciona um novo atributo à seção geral da nota fiscal"""
+    data = await request.json()
+    try:
+        new_attr = json_manager.add_attribute('nota', data.get("description"), section=0)
+        return new_attr
+    except Exception as e:
+        return {"error": str(e)}, 400
+
+@app.post("/RemoveAtrNotaFiscalGeral")
+async def remove_atributo_nota_geral(request: Request):
+    """Remove um atributo da seção geral da nota fiscal"""
+    data = await request.json()
+    try:
+        removed = json_manager.remove_attribute('nota', data.get("index"), section=0)
+        return removed if removed else {"error": "Atributo não encontrado"}, 404
+    except Exception as e:
+        return {"error": str(e)}, 400
+
+
+@app.get("/GetAtrNotaFiscalProdutos")
+async def get_atributos_nota_produtos():
+    """Retorna os atributos de produtos da nota fiscal"""
+    try:
+        data = json_manager.load_data('nota')
+        return data[1]  
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@app.post("/AddAtrNotaFiscalProdutos")
+async def add_atributo_nota_produtos(request: Request):
+    """Adiciona um novo atributo à seção de produtos da nota fiscal"""
+    data = await request.json()
+    try:
+        new_attr = json_manager.add_attribute('nota', data.get("description"), section=1)
+        return new_attr
+    except Exception as e:
+        return {"error": str(e)}, 400
+
+@app.post("/RemoveAtrNotaFiscalProdutos")
+async def remove_atributo_nota_produtos(request: Request):
+    """Remove um atributo da seção de produtos da nota fiscal"""
+    data = await request.json()
+    try:
+        removed = json_manager.remove_attribute('nota', data.get("index"), section=1)
+        return removed if removed else {"error": "Atributo não encontrado"}, 404
+    except Exception as e:
+        return {"error": str(e)}, 400
 
 
 

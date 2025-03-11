@@ -12,7 +12,7 @@ class ContaAgua:
         self.llm = LLm().llm_instance("gemini")
 
     def extrair_conta_agua(self, texto):
-        with open('view/agua.json') as f:
+        with open('model/agua.json') as f:
             dadosCOntaAgua = json.load(f)
 
         # Definir atributos fixos

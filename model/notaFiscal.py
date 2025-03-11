@@ -11,7 +11,7 @@ class NotaFiscal:
         self.llm = LLm().llm_instance("gemini")
         
     def extrair_nota_fiscal(self, texto):
-        with open('view/notaFiscal.json') as f:
+        with open('model/notaFiscal.json') as f:
             dadosNotaFiscal = json.load(f)
 
         # Definir atributos fixos

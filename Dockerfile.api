@@ -8,8 +8,7 @@ WORKDIR /app
 COPY model/ /app/model/
 COPY controller/ /app/controller/
 COPY BD/ /app/BD/
-COPY view/agua.json /app/view/
-COPY view/notaFiscal.json /app/view/
+
 
 # Copia as dependências
 COPY requirements.txt .
