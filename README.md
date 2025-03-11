@@ -70,7 +70,7 @@ Siga os passos abaixo para executar o projeto utilizando Docker:
    ```bash
    docker-compose up
    ```
-   A api ficará disponível na porta 8080.
+   A api ficará disponível na porta 8000.
 
 
 
