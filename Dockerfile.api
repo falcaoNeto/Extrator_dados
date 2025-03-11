@@ -1,0 +1,28 @@
+# Usa uma imagem base do Python
+FROM python:3.11
+
+# Define o diretório de trabalho dentro do container
+WORKDIR /app
+
+# Copia as pastas do projeto
+COPY model/ /app/model/
+COPY controller/ /app/controller/
+COPY BD/ /app/BD/
+COPY view/agua.json /app/view/
+COPY view/notaFiscal.json /app/view/
+
+# Copia as dependências
+COPY requirements.txt .
+
+# Instala os pacotes Python necessários
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN apt-get update && \
+    apt-get install -y libgl1 libglib2.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Expõe a porta que a API utiliza
+EXPOSE 8000
+
+# Comando para rodar a API
+CMD ["uvicorn", "controller.api:app", "--host", "0.0.0.0", "--port", "8000"]

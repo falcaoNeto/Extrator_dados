@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api  # Dockerfile da API
+    ports:
+      - "8000:8000"  # Expor a API na porta 8000
+    env_file:
+      - .env  # Carregar variáveis de ambiente
+    restart: always  # Reiniciar automaticamente se falhar
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot  # Dockerfile do Bot
+    env_file:
+      - .env  # Carregar variáveis de ambiente
+    depends_on:
+      - api  # Garantir que a API suba antes do Bot
+    restart: always

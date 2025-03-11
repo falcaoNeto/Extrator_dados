@@ -1,31 +1,17 @@
 [
     [
+        
         {
             "index": 0,
             "type": "string",
-            "description": "Data de vencimento da fatura"
-        },
-        {
-            "index": 1,
-            "type": "number",
-            "description": "Valor total da fatura"
-        },
-        {
-            "index": 2,
-            "type": "string",
-            "description": "teste"
+            "description": "cnpqj da empresa"
         }
     ],
     [
         {
             "index": 0,
-            "type": "string",
-            "description": "nome do produto"
-        },
-        {
-            "index": 1,
             "type": "number",
-            "description": "preço"
+            "description": "quatidade do produto"
         }
     ]
 ]

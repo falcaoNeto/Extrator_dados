@@ -1,0 +1,10 @@
+FROM python:3.11
+
+WORKDIR /app
+
+COPY view/ /app/view/
+COPY requirements_bot.txt .
+
+RUN pip install --no-cache-dir -r requirements_bot.txt
+
+CMD ["python", "view/bot.py"]

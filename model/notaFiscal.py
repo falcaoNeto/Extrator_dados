@@ -1,52 +1,54 @@
-
-from langchain_google_genai import GoogleGenerativeAI
-from langchain.prompts import PromptTemplate
-from dotenv import load_dotenv
-import os
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import  Field, create_model
 from typing import List
 import json
-
-
-load_dotenv()
-KEY_API = os.getenv("GOOGLE_API_KEY")
-
+import sqlite3
+from model.LLm import LLm
 
 class NotaFiscal:
-    def __init__(self, texto, model="gemini-1.5-flash", api_key=KEY_API):
-        self.texto = texto
-        self.llm = GoogleGenerativeAI(model=model, api_key=api_key)
+    def __init__(self):
+        self.llm = LLm().llm_instance("gemini")
         
-
-    def extrair_nota_fiscal(self, campo_extra=None):
+    def extrair_nota_fiscal(self, texto):
         with open('view/notaFiscal.json') as f:
             dadosNotaFiscal = json.load(f)
-        camposProdutos = {
-            dado["description"]: (str, Field(description=dado["description"]))  
-            for dado in dadosNotaFiscal[1]
+
+        # Definir atributos fixos
+        atributos_fixos_NF = {
+            "Nome_empresa": (str, Field(description="nome da empresa")),
+            "Data_compra": (str, Field(description="data de compra, sempre coloque no formato de 'YYYY-MM-DD'")),
+            "Valor_total": (float, Field(description="valor total da compra"))
         }
-        DinamicModelProdutos = create_model(    
-            "Produtos",
-            **camposProdutos
-        )
-        camposNotaFiscal = {
-            dado["description"]: (str, Field(description=dado["description"]))  
+
+        atributos_dinamicos_NF = {
+            dado["description"]: (str, Field(description=dado["description"]))
             for dado in dadosNotaFiscal[0]
         }
-        camposNotaFiscal["produtos"] = (List[DinamicModelProdutos], Field(description="Lista de produtos na nota fiscal"))
-        DinamicModelNotaFiscal = create_model(
-            "NotaFiscal",  
-            **camposNotaFiscal
-)
+        
+        campos_NF = {**atributos_fixos_NF, **atributos_dinamicos_NF}
+
+        atributos_fixos_Produtos = {
+            "Nome_produto": (str, Field(description="nome do produto")),
+            "Valor_produto": (float, Field(description="valor do por unidade do produto"))
+        }
+
+        atributos_dinamicos_Produtos = {
+            dado["description"]: (str, Field(description=dado["description"]))
+            for dado in dadosNotaFiscal[1]
+        }
+
+        campos_Produtos = {**atributos_fixos_Produtos, **atributos_dinamicos_Produtos}
+        
+        campos_NF["produtos"] = (List[create_model("Produtos", **campos_Produtos)], Field(description="Lista de produtos na nota fiscal"))
+
+        
+        DinamicModelNotaFiscal = create_model("ContaAgua", **campos_NF)
 
         parser = PydanticOutputParser(pydantic_object=DinamicModelNotaFiscal)
         
-    
         format_instructions = parser.get_format_instructions()
         
-        # Criar um template de prompt que inclui as instruções de formatação
         prompt = PromptTemplate.from_template(
             """Extraia os seguintes dados da nota fiscal abaixo:
             
@@ -62,13 +64,13 @@ class NotaFiscal:
         
         formatted_prompt = prompt.format(
             format_instructions=format_instructions,
-            texto=self.texto
+            texto=texto
         )
         
         resposta_llm = self.llm.invoke(formatted_prompt)
         
         try:
-            json_text = resposta_llm.split("```json")[1].split("```")[0].strip()
+            json_text = resposta_llm.content.split("```json")[1].split("```")[0].strip()
             dados_json = json.loads(json_text)
             return dados_json
         except Exception as e:
@@ -77,7 +79,46 @@ class NotaFiscal:
             return None
         
 
+    def salvar_nota_fiscal(self, dados):
+        conector = sqlite3.connect("BD/database.db")
+        cursor = conector.cursor()
+        cursor.execute("""
+        INSERT INTO NotaFiscal (Nome_empresa, Data_compra, Valor_total) 
+        VALUES (?, ?, ?) RETURNING id
+        """, (dados['Nome_empresa'], dados['Data_compra'], dados['Valor_total']))
 
+        id_notafiscal = cursor.fetchone()[0]
+        
+        if len(dados) > 4:
+            chaves = list(dados.keys())
+            valores = list(dados.values())
+
+            for i in range(3, len(dados)):
+                if chaves[i] == "produtos":
+                    continue
+                cursor.execute("INSERT INTO NotaFiscalDinamico (NotaFiscal_id, chave, valor) VALUES (?, ?, ?)",
+                            (id_notafiscal, chaves[i], valores[i]))
+        
+        for produto in dados["produtos"]:
+            cursor.execute("""
+                INSERT INTO NotaFiscalProdutos (NotaFiscal_id, Nome_produto, Valor_produto) 
+                VALUES (?, ?, ?) RETURNING id
+            """, (id_notafiscal, produto["Nome_produto"], produto["Valor_produto"]))
+
+            id_notafiscalProduto = cursor.fetchone()[0]
+
+            if len(produto) > 2:
+                chaves = list(produto.keys())
+                valores = list(produto.values())
+
+                for i in range(2, len(produto)):
+                    cursor.execute("INSERT INTO NotaFiscalProdutosDinamicos (NotaFiscalProdutos_id, chave, valor) VALUES (?, ?, ?)",
+                                (id_notafiscalProduto, chaves[i], valores[i]))
+
+
+        conector.commit()
+        return True
+        
 if __name__ == "__main__":
     text = """N°693983
 
@@ -323,17 +364,16 @@ NUMERA˙ˆO
 INSCRI˙ˆO ESTADUAL
 
 3.254,07"""
-    extrai = NotaFiscal(text)
-    result = extrai.extrair_nota_fiscal()
-    if os.path.exists("BD/NotaFiscalBD.json") and os.path.getsize("BD/NotaFiscalBD.json") > 0:
-        with(open("BD/NotaFiscalBD.json", "r+")) as f:
-                dados = json.load(f)
-                dados.append(result)
-                f.seek(0)
-                json.dump(dados, f, ensure_ascii=False, indent=2)
+    extrai = NotaFiscal()
+
+    result = extrai.extrair_nota_fiscal(text)
+    confirmar = extrai.salvar_nota_fiscal(result)
+    if confirmar:
+        print("Dados salvos com sucesso")
     else:
-        with open("BD/NotaFiscalBD.json", "w", encoding="utf-8") as f:
-            json.dump([result], f, ensure_ascii=False, indent=2)
+        print("Erro ao salvar os dados")
+
+    
     print(result)
 
             
