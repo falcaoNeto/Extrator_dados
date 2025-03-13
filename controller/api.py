@@ -7,17 +7,17 @@ from docling.document_converter import DocumentConverter
 from model.extrairFoto import extrair_texto_da_foto
 from typing import List
 from model.agentsql import Agent
+from model.atrDinamicos import JsonDocumentManager
 
 app = FastAPI()
+json_manager = JsonDocumentManager(base_path="model")
 
+# Rota que recebe Uma foto
 @app.post("/uploadPhoto")
 async def upload_photo(file: UploadFile = File(...)):
     print(file)
     image_bytes = await file.read()
-
-    
     textoresult = extrair_texto_da_foto(image_bytes)
-
 
     result_classificar = Classificar(textoresult).classificar_texto()
     
@@ -42,7 +42,7 @@ async def upload_photo(file: UploadFile = File(...)):
     else:
         result_extrair = "NenhumOutro"
 
-    
+# Rota que recebe 2 ou mais fotos
 @app.post("/uploadPhotos")
 async def upload_photos(files: List[UploadFile] = File(...)):
     textoImagem = ""
@@ -79,7 +79,7 @@ async def upload_photos(files: List[UploadFile] = File(...)):
     else:
         result_extrair = "NenhumOutro"
 
-
+# Rota que recebe um PDF
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
@@ -113,7 +113,7 @@ async def upload_file(file: UploadFile = File(...)):
     else:
         result_extrair = "NenhumOutro"
 
-
+# Rota para responder as perguntas usando um AgentSQL
 @app.post("/response")
 async def response(request: Request):
     data = await request.json() 
@@ -124,11 +124,7 @@ async def response(request: Request):
     return {"response": response}
 
 
-from model.atrDinamicos import JsonDocumentManager
-
-
-json_manager = JsonDocumentManager(base_path="model")
-
+# Rotas para CRUD dos dados dinamicos de ContaAgua e NotaFiscal
 @app.get("/GetAtrAgua")
 async def get_atributos_agua():
     """Retorna todos os atributos da conta de água"""

@@ -14,8 +14,7 @@ class ContaAgua:
     def extrair_conta_agua(self, texto):
         with open('model/agua.json') as f:
             dadosCOntaAgua = json.load(f)
-
-        # Definir atributos fixos
+            
         atributos_fixos = {
             "Mes_de_referencia": (str, Field(description="mes de referÊcia da conta, retorne no formato YYYY-MM-01")),
             "valor_total": (float, Field(description="Valor total da conta")),
